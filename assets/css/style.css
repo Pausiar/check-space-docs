@@ -191,6 +191,12 @@ a:hover { color: var(--clr-primary-h); }
 }
 .navbar__links a:hover { color: var(--clr-text); }
 
+.navbar__links .btn--primary,
+.navbar__links .btn--primary:hover,
+.navbar__links .btn--primary:focus-visible {
+  color: #fff;
+}
+
 /* ---------- Hero ---------- */
 .hero {
   padding: 96px 0 80px;
