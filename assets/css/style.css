@@ -191,18 +191,6 @@ a:hover { color: var(--clr-primary-h); }
 }
 .navbar__links a:hover { color: var(--clr-text); }
 
-.navbar__links .btn--primary {
-  color: #fff;
-  background: var(--clr-cyan);
-  border-color: var(--clr-cyan);
-}
-
-.navbar__links .btn--primary:hover {
-  color: #001325;
-  background: #67e8f9;
-  border-color: #67e8f9;
-}
-
 /* ---------- Hero ---------- */
 .hero {
   padding: 96px 0 80px;
