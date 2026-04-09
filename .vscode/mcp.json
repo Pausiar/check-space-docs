@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "Vercel": {
+      "command": "vercel",
+      "args": ["mcp"]
+    }
+  }
+}

@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://pausiar.github.io/check-space-docs/sitemap.xml
+Sitemap: https://check-space-docs.vercel.app/sitemap.xml

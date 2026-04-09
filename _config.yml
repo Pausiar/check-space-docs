@@ -5,8 +5,8 @@ description: >-
   en tu PC. Analizador de disco gratuito con visualización en tiempo real
   para Windows, Mac y Linux.
 
-url: "https://pausiar.github.io"
-baseurl: "/check-space-docs"
+url: "https://check-space-docs.vercel.app"
+baseurl: ""
 lang: "es-ES"
 
 author:
