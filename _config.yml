@@ -1,0 +1,46 @@
+title: "Check Space"
+tagline: "Analizador de Espacio de Disco Gratuito"
+description: >-
+  Descubre en segundos qué archivos y carpetas están ocupando más espacio
+  en tu PC. Analizador de disco gratuito con visualización en tiempo real
+  para Windows, Mac y Linux.
+
+url: "https://pausiar.github.io"
+baseurl: "/check-space-docs"
+lang: "es-ES"
+
+author:
+  name: "Pausiar"
+
+github:
+  username: Pausiar
+  repository: check-space
+
+twitter:
+  card: summary_large_image
+
+social:
+  name: Check Space
+  links:
+    - https://github.com/Pausiar/check-space
+
+# SEO defaults
+defaults:
+  - scope:
+      path: ""
+    values:
+      og_image: /assets/images/og-image.png
+
+# Plugins (GitHub Pages whitelist)
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# Sitemap exclusions
+sitemap:
+  exclude:
+    - "404.html"
+
+# Build settings
+markdown: kramdown
+theme: null
