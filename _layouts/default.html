@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="index,follow,max-image-preview:large">
   <meta name="google-site-verification" content="lMgmviyzAEtdI4kk1GYr1Bmbf03BI3K5N0eMR3a0JBQ">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7612805768657333" crossorigin="anonymous"></script>
+  <!-- AdSense se carga de forma condicional tras el consentimiento del usuario (RGPD) -->
   {% seo %}
   <meta property="og:image" content="{{ '/assets/images/og-image.svg' | absolute_url }}">
   <meta property="og:image:alt" content="Check Space analizador de espacio en disco para Windows">
@@ -25,7 +25,10 @@
     <div class="cookie-banner__inner">
       <div class="cookie-banner__text">
         <strong>Usamos cookies</strong>
-        <p>Este sitio utiliza cookies propias y de terceros (Google AdSense, Google Analytics) para analizar el tráfico y mostrar publicidad relevante. Puedes aceptarlas o rechazarlas. <a href="/politica-cookies/" class="cookie-banner__link">Política de cookies</a></p>
+        <p>Este sitio utiliza cookies propias y de terceros (Google AdSense) para mostrar publicidad relevante. Puedes aceptarlas o rechazarlas.
+          <a href="/politica-cookies/" class="cookie-banner__link">Política de cookies</a> ·
+          <a href="/politica-privacidad/" class="cookie-banner__link">Privacidad</a>
+        </p>
       </div>
       <div class="cookie-banner__actions">
         <button id="cookie-accept" class="btn btn--cookie">Aceptar cookies</button>
@@ -36,12 +39,36 @@
 
   <script>
     (function() {
+      /* Carga AdSense de forma diferida solo si el usuario ha aceptado cookies (cumplimiento RGPD) */
+      function loadAdSense() {
+        if (document.querySelector('script[src*="adsbygoogle"]')) return;
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7612805768657333';
+        s.setAttribute('crossorigin', 'anonymous');
+        document.head.appendChild(s);
+      }
+
+      /* Permite al usuario reabrir el banner para cambiar su preferencia */
+      window.resetCookieConsent = function() {
+        localStorage.removeItem('cookie-consent');
+        document.getElementById('cookie-banner').style.display = 'flex';
+      };
+
       var banner = document.getElementById('cookie-banner');
       var consent = localStorage.getItem('cookie-consent');
-      if (!consent) { banner.style.display = 'flex'; }
+
+      if (consent === 'accepted') {
+        loadAdSense();
+      } else if (!consent) {
+        banner.style.display = 'flex';
+      }
+      /* Si consent === 'rejected': no se muestra el banner, no se carga AdSense */
+
       document.getElementById('cookie-accept').addEventListener('click', function() {
         localStorage.setItem('cookie-consent', 'accepted');
         banner.style.display = 'none';
+        loadAdSense();
       });
       document.getElementById('cookie-reject').addEventListener('click', function() {
         localStorage.setItem('cookie-consent', 'rejected');
