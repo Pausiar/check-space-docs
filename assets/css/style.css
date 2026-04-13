@@ -10,12 +10,12 @@
   --clr-bg-2:      #111827;
   --clr-bg-card:   #161f35;
   --clr-border:    rgba(99, 102, 241, 0.2);
-  --clr-primary:   #6366f1;
-  --clr-primary-h: #818cf8;
+  --clr-primary:   #4f46e5;
+  --clr-primary-h: #4338ca;
   --clr-cyan:      #22d3ee;
   --clr-text:      #f1f5f9;
   --clr-muted:     #94a3b8;
-  --clr-muted-2:   #64748b;
+  --clr-muted-2:   #9aa4b2;
 
   --font: 'Inter', system-ui, -apple-system, sans-serif;
   --radius: 12px;
