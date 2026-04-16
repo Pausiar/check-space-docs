@@ -16,6 +16,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}?v={{ site.github.build_revision | default: site.time | date: '%s' }}">
   <link rel="icon" type="image/svg+xml" href="{{ '/assets/images/favicon.svg' | relative_url }}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Check Space",
+    "url": "https://check-space-docs.vercel.app",
+    "description": "Free disk space analyzer for Windows that visualizes which files and folders are using the most storage on your PC.",
+    "sameAs": [
+      "https://github.com/Pausiar/check-space"
+    ]
+  }
+  </script>
 </head>
 <body>
   {{ content }}
