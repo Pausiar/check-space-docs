@@ -30,8 +30,7 @@ Check Space is a free, open-source desktop application for Windows 10 and 11. It
 ## Key URLs
 - Homepage: https://check-space-docs.vercel.app/
 - FAQ: https://check-space-docs.vercel.app/faq/
-- Download (Windows installer): https://github.com/Pausiar/check-space/releases/download/v1.0.0/Check.Space.Setup.1.0.0.exe
-- Download (Portable): https://github.com/Pausiar/check-space/releases/download/v1.0.0/CheckSpace-Portable.exe
+- Download (latest release): https://github.com/Pausiar/check-space/releases/latest
 - GitHub (source code): https://github.com/Pausiar/check-space
 - All releases: https://github.com/Pausiar/check-space/releases
 
