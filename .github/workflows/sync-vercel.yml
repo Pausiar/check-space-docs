@@ -12,6 +12,8 @@ on:
 jobs:
   check-and-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -51,8 +53,8 @@ jobs:
           GITHUB_SHA="${{ steps.github_sha.outputs.sha }}"
           VERCEL_SHA="${{ steps.vercel_sha.outputs.sha }}"
 
-          echo "GitHub SHA : $GITHUB_SHA"
-          echo "Vercel SHA : $VERCEL_SHA"
+          echo "GitHub SHA: $GITHUB_SHA"
+          echo "Vercel SHA: $VERCEL_SHA"
 
           if [ "$GITHUB_SHA" = "$VERCEL_SHA" ]; then
             echo "✅ Vercel is up to date with GitHub."
@@ -73,5 +75,8 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
         run: |
-          vercel --prod --yes --token "$VERCEL_TOKEN"
+          vercel --prod --yes \
+            --token "$VERCEL_TOKEN" \
+            --project "$VERCEL_PROJECT_ID" \
+            --scope "$VERCEL_ORG_ID"
           echo "🚀 Deployment triggered successfully."
