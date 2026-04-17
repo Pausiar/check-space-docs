@@ -1,0 +1,77 @@
+name: Sync Vercel with latest GitHub commit
+
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    # Runs every hour to catch any missed deployments
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  check-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get latest GitHub commit SHA
+        id: github_sha
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Get latest Vercel deployment commit SHA
+        id: vercel_sha
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
+        run: |
+          TEAM_PARAM=""
+          if [ -n "$VERCEL_TEAM_ID" ]; then
+            TEAM_PARAM="&teamId=$VERCEL_TEAM_ID"
+          fi
+
+          RESPONSE=$(curl -s \
+            -H "Authorization: Bearer $VERCEL_TOKEN" \
+            "https://api.vercel.com/v6/deployments?projectId=$VERCEL_PROJECT_ID&limit=5&target=production${TEAM_PARAM}")
+
+          echo "Vercel API response: $RESPONSE"
+
+          # Extract the commit SHA of the most recent successful production deployment
+          DEPLOYED_SHA=$(echo "$RESPONSE" | \
+            jq -r '[.deployments[] | select(.state == "READY")] | first | .meta.githubCommitSha // empty')
+
+          echo "Deployed SHA: $DEPLOYED_SHA"
+          echo "sha=$DEPLOYED_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Compare SHAs
+        id: compare
+        run: |
+          GITHUB_SHA="${{ steps.github_sha.outputs.sha }}"
+          VERCEL_SHA="${{ steps.vercel_sha.outputs.sha }}"
+
+          echo "GitHub SHA : $GITHUB_SHA"
+          echo "Vercel SHA : $VERCEL_SHA"
+
+          if [ "$GITHUB_SHA" = "$VERCEL_SHA" ]; then
+            echo "✅ Vercel is up to date with GitHub."
+            echo "needs_deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "⚠️ Vercel is NOT up to date. Forcing deployment..."
+            echo "needs_deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Vercel CLI
+        if: steps.compare.outputs.needs_deploy == 'true'
+        run: npm install -g vercel@latest
+
+      - name: Deploy to Vercel
+        if: steps.compare.outputs.needs_deploy == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
+        run: |
+          vercel --prod --yes --token "$VERCEL_TOKEN"
+          echo "🚀 Deployment triggered successfully."
