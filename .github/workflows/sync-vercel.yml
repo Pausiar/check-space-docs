@@ -22,6 +22,17 @@ jobs:
         id: github_sha
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
+      - name: Check required secrets
+        run: |
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+            echo "❌ VERCEL_TOKEN secret is not set. Please add it in the repository settings under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+          if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            echo "❌ VERCEL_PROJECT_ID secret is not set. Please add it in the repository settings under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
       - name: Get latest Vercel deployment commit SHA
         id: vercel_sha
         env:
@@ -40,9 +51,15 @@ jobs:
 
           echo "Vercel API response: $RESPONSE"
 
+          # Exit early with a clear message if the API returned an error
+          if echo "$RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
+            echo "❌ Vercel API error: $(echo "$RESPONSE" | jq -r '.error.message')"
+            exit 1
+          fi
+
           # Extract the commit SHA of the most recent successful production deployment
           DEPLOYED_SHA=$(echo "$RESPONSE" | \
-            jq -r '[.deployments[] | select(.state == "READY")] | first | .meta.githubCommitSha // empty')
+            jq -r '[(.deployments // [])[] | select(.state == "READY")] | first | .meta.githubCommitSha // empty')
 
           echo "Deployed SHA: $DEPLOYED_SHA"
           echo "sha=$DEPLOYED_SHA" >> "$GITHUB_OUTPUT"
