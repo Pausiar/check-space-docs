@@ -25,16 +25,16 @@ jobs:
       - name: Check required secrets
         run: |
           if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
-            echo "❌ VERCEL_TOKEN secret is not set. Please add it in the repository settings under Settings → Secrets and variables → Actions."
+            echo "VERCEL_TOKEN secret is not set. Please add it in the repository settings under Settings > Secrets and variables > Actions."
             exit 1
           fi
           if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
-            echo "❌ VERCEL_PROJECT_ID secret is not set. Please add it in the repository settings under Settings → Secrets and variables → Actions."
-            exit 1
+            echo "Warning: VERCEL_PROJECT_ID secret is not set. SHA comparison will be skipped and deployment will always run."
           fi
 
       - name: Get latest Vercel deployment commit SHA
         id: vercel_sha
+        if: "${{ secrets.VERCEL_PROJECT_ID != '' }}"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -53,7 +53,7 @@ jobs:
 
           # Exit early with a clear message if the API returned an error
           if echo "$RESPONSE" | jq -e '.error' > /dev/null 2>&1; then
-            echo "❌ Vercel API error: $(echo "$RESPONSE" | jq -r '.error.message')"
+            echo "Vercel API error: $(echo "$RESPONSE" | jq -r '.error.message')"
             exit 1
           fi
 
@@ -66,6 +66,8 @@ jobs:
 
       - name: Compare SHAs
         id: compare
+        env:
+          HAS_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID != '' }}
         run: |
           GITHUB_SHA="${{ steps.github_sha.outputs.sha }}"
           VERCEL_SHA="${{ steps.vercel_sha.outputs.sha }}"
@@ -73,11 +75,14 @@ jobs:
           echo "GitHub SHA: $GITHUB_SHA"
           echo "Vercel SHA: $VERCEL_SHA"
 
-          if [ "$GITHUB_SHA" = "$VERCEL_SHA" ]; then
-            echo "✅ Vercel is up to date with GitHub."
+          if [ "$HAS_PROJECT_ID" = "false" ]; then
+            echo "VERCEL_PROJECT_ID not set - skipping SHA comparison, will deploy unconditionally."
+            echo "needs_deploy=true" >> "$GITHUB_OUTPUT"
+          elif [ "$GITHUB_SHA" = "$VERCEL_SHA" ]; then
+            echo "Vercel is up to date with GitHub."
             echo "needs_deploy=false" >> "$GITHUB_OUTPUT"
           else
-            echo "⚠️ Vercel is NOT up to date. Forcing deployment..."
+            echo "Vercel is NOT up to date. Forcing deployment..."
             echo "needs_deploy=true" >> "$GITHUB_OUTPUT"
           fi
 
@@ -92,8 +97,12 @@ jobs:
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
           VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
         run: |
-          vercel --prod --yes \
-            --token "$VERCEL_TOKEN" \
-            --project "$VERCEL_PROJECT_ID" \
-            --scope "$VERCEL_ORG_ID"
-          echo "🚀 Deployment triggered successfully."
+          DEPLOY_ARGS="--prod --yes --token $VERCEL_TOKEN"
+          if [ -n "$VERCEL_PROJECT_ID" ]; then
+            DEPLOY_ARGS="$DEPLOY_ARGS --project $VERCEL_PROJECT_ID"
+          fi
+          if [ -n "$VERCEL_ORG_ID" ]; then
+            DEPLOY_ARGS="$DEPLOY_ARGS --scope $VERCEL_ORG_ID"
+          fi
+          vercel $DEPLOY_ARGS
+          echo "Deployment triggered successfully."
