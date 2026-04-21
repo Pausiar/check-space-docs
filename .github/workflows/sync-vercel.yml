@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - 'copilot/**'
   schedule:
     # Runs every hour to catch any missed deployments
     - cron: '0 * * * *'
@@ -14,35 +15,39 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Check required secrets
+        run: |
+          if [ -z "$VERCEL_TOKEN" ]; then
+            echo "VERCEL_TOKEN secret is not set. Please add it in the repository settings under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          if [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "Warning: VERCEL_PROJECT_ID secret is not set. SHA comparison will be skipped and deployment will always run."
+          fi
 
       - name: Get latest GitHub commit SHA
         id: github_sha
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Check required secrets
-        run: |
-          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
-            echo "VERCEL_TOKEN secret is not set. Please add it in the repository settings under Settings > Secrets and variables > Actions."
-            exit 1
-          fi
-          if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
-            echo "Warning: VERCEL_PROJECT_ID secret is not set. SHA comparison will be skipped and deployment will always run."
-          fi
-
       - name: Get latest Vercel deployment commit SHA
         id: vercel_sha
-        if: "${{ secrets.VERCEL_PROJECT_ID != '' }}"
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_TEAM_ID: ${{ secrets.VERCEL_TEAM_ID }}
         run: |
+          if [ -z "$VERCEL_PROJECT_ID" ]; then
+            echo "sha=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           TEAM_PARAM=""
-          if [ -n "$VERCEL_TEAM_ID" ]; then
-            TEAM_PARAM="&teamId=$VERCEL_TEAM_ID"
+          if [ -n "$VERCEL_ORG_ID" ]; then
+            TEAM_PARAM="&teamId=$VERCEL_ORG_ID"
           fi
 
           RESPONSE=$(curl -s \
@@ -64,10 +69,8 @@ jobs:
           echo "Deployed SHA: $DEPLOYED_SHA"
           echo "sha=$DEPLOYED_SHA" >> "$GITHUB_OUTPUT"
 
-      - name: Compare SHAs
+      - name: Compare SHAs and decide whether to deploy
         id: compare
-        env:
-          HAS_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID != '' }}
         run: |
           GITHUB_SHA="${{ steps.github_sha.outputs.sha }}"
           VERCEL_SHA="${{ steps.vercel_sha.outputs.sha }}"
@@ -75,7 +78,7 @@ jobs:
           echo "GitHub SHA: $GITHUB_SHA"
           echo "Vercel SHA: $VERCEL_SHA"
 
-          if [ "$HAS_PROJECT_ID" = "false" ]; then
+          if [ -z "$VERCEL_PROJECT_ID" ]; then
             echo "VERCEL_PROJECT_ID not set - skipping SHA comparison, will deploy unconditionally."
             echo "needs_deploy=true" >> "$GITHUB_OUTPUT"
           elif [ "$GITHUB_SHA" = "$VERCEL_SHA" ]; then
@@ -92,10 +95,6 @@ jobs:
 
       - name: Deploy to Vercel
         if: steps.compare.outputs.needs_deploy == 'true'
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
         run: |
           DEPLOY_ARGS="--prod --yes --token $VERCEL_TOKEN"
           if [ -n "$VERCEL_PROJECT_ID" ]; then
