@@ -30,21 +30,23 @@ description: "Analiza archivos y carpetas que ocupan más espacio en Windows 10 
   <section class="hero" aria-labelledby="hero-title">
     <div class="container hero__inner">
       <div class="hero__content">
-        <span class="badge">v1.0.0 disponible — Windows</span>
+        <span class="badge" id="hero-version-badge">v1.0.0 disponible — Windows</span>
         <h1 id="hero-title">Descubre qué llena tu disco con <span class="gradient-text">Check Space</span></h1>
         <p class="hero__desc">
           Un <strong>analizador de espacio de disco gratuito</strong> para ver en segundos qué carpetas,
           archivos temporales y descargas están consumiendo almacenamiento en tu PC. Claro, rápido y sin complicaciones.
         </p>
         <div class="hero__actions">
-          <a href="https://github.com/Pausiar/check-space/releases/download/v1.0.0/Check.Space.Setup.1.0.0.exe"
+          <a id="hero-installer-btn"
+             href="https://github.com/Pausiar/check-space/releases/download/v1.0.0/Check.Space.Setup.1.0.0.exe"
              class="btn btn--primary btn--lg">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
               <path d="M13 2v10.586l3.293-3.293 1.414 1.414L12 16.414l-5.707-5.707 1.414-1.414L11 12.586V2h2zm-9 18v-6H2v8h20v-8h-2v6H4z"/>
             </svg>
             Descargar para Windows
           </a>
-          <a href="https://github.com/Pausiar/check-space/releases/download/v1.0.0/CheckSpace-Portable.exe"
+          <a id="hero-portable-btn"
+             href="https://github.com/Pausiar/check-space/releases/download/v1.0.0/CheckSpace-Portable.exe"
              class="btn btn--ghost btn--lg">
             Versión Portable
           </a>
@@ -369,13 +371,15 @@ description: "Analiza archivos y carpetas que ocupan más espacio en Windows 10 
             </svg>
           </div>
           <h3>Windows</h3>
-          <span class="version-badge">v1.0.0</span>
+          <span class="version-badge" id="download-version-badge">v1.0.0</span>
           <p>Instalador para Windows 10/11. La forma recomendada de instalar Check Space.</p>
-          <a href="https://github.com/Pausiar/check-space/releases/download/v1.0.0/Check.Space.Setup.1.0.0.exe"
+          <a id="download-installer-btn"
+             href="https://github.com/Pausiar/check-space/releases/download/v1.0.0/Check.Space.Setup.1.0.0.exe"
              class="btn btn--primary btn--block">
             Descargar instalador (.exe)
           </a>
-          <a href="https://github.com/Pausiar/check-space/releases/download/v1.0.0/CheckSpace-Portable.exe"
+          <a id="download-portable-btn"
+             href="https://github.com/Pausiar/check-space/releases/download/v1.0.0/CheckSpace-Portable.exe"
              class="btn btn--ghost btn--block">
             Versión portable (.exe)
           </a>
@@ -538,3 +542,47 @@ description: "Analiza archivos y carpetas que ocupan más espacio en Windows 10 
     </nav>
   </div>
 </footer>
+
+<script>
+(function () {
+  fetch('https://api.github.com/repos/Pausiar/check-space/releases/latest')
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var tag = data.tag_name;
+      var assets = data.assets || [];
+
+      var installerAsset = assets.find(function (a) {
+        return /Check\.Space\.Setup.*\.exe$/i.test(a.name);
+      });
+      var portableAsset = assets.find(function (a) {
+        return /CheckSpace-Portable\.exe$/i.test(a.name);
+      });
+
+      var installerUrl = installerAsset
+        ? installerAsset.browser_download_url
+        : 'https://github.com/Pausiar/check-space/releases/latest';
+      var portableUrl = portableAsset
+        ? portableAsset.browser_download_url
+        : 'https://github.com/Pausiar/check-space/releases/latest';
+
+      var heroBadge = document.getElementById('hero-version-badge');
+      if (heroBadge) heroBadge.textContent = tag + ' disponible — Windows';
+
+      var downloadBadge = document.getElementById('download-version-badge');
+      if (downloadBadge) downloadBadge.textContent = tag;
+
+      ['hero-installer-btn', 'download-installer-btn'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.href = installerUrl;
+      });
+
+      ['hero-portable-btn', 'download-portable-btn'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) el.href = portableUrl;
+      });
+    })
+    .catch(function () {
+      // Fallo silencioso: los enlaces estáticos de fallback permanecen activos
+    });
+}());
+</script>
