@@ -23,6 +23,7 @@ jobs:
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Check required secrets
+        id: check_secrets
         run: |
           if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
             echo "VERCEL_TOKEN secret is not set. Please add it in the repository settings under Settings > Secrets and variables > Actions."
@@ -30,11 +31,14 @@ jobs:
           fi
           if [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
             echo "Warning: VERCEL_PROJECT_ID secret is not set. SHA comparison will be skipped and deployment will always run."
+            echo "has_project_id=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_project_id=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Get latest Vercel deployment commit SHA
         id: vercel_sha
-        if: "${{ secrets.VERCEL_PROJECT_ID != '' }}"
+        if: steps.check_secrets.outputs.has_project_id == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
           VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
@@ -67,7 +71,7 @@ jobs:
       - name: Compare SHAs
         id: compare
         env:
-          HAS_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID != '' }}
+          HAS_PROJECT_ID: ${{ steps.check_secrets.outputs.has_project_id }}
         run: |
           GITHUB_SHA="${{ steps.github_sha.outputs.sha }}"
           VERCEL_SHA="${{ steps.vercel_sha.outputs.sha }}"
