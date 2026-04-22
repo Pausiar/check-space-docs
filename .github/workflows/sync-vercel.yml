@@ -102,9 +102,6 @@ jobs:
           VERCEL_ORG_ID: ${{ secrets.VERCEL_TEAM_ID }}
         run: |
           DEPLOY_ARGS="--prod --yes --token $VERCEL_TOKEN"
-          if [ -n "$VERCEL_PROJECT_ID" ]; then
-            DEPLOY_ARGS="$DEPLOY_ARGS --project $VERCEL_PROJECT_ID"
-          fi
           if [ -n "$VERCEL_ORG_ID" ]; then
             DEPLOY_ARGS="$DEPLOY_ARGS --scope $VERCEL_ORG_ID"
           fi
